@@ -78,7 +78,7 @@ class BoundaryCondition:
         file.write('                </boundary_condition>\n')
         
         
-    def writeNeumannTimeDependantBoundary(self, file):
+    def writeNeumannTimeDependentBoundary(self, file):
         file.write('                <boundary_condition>\n')    
         file.write('                    <type>'+self.type+'</type>\n')
         file.write('                    <mesh>'+self.mesh+'</mesh>\n')
@@ -161,7 +161,7 @@ class GenerateProject:
         self.processsecond_var_out_name = 'darcy_velocity'
         
     def setStandardDensityModel(self):
-        self.densityModel = "ConcentrationAndPressureDependant"
+        self.densityModel = "ConcentrationAndPressureDependent"
 
         
     def writeProcessInformation(self):
@@ -346,22 +346,6 @@ class GenerateProject:
 
         
         self.file.write('    </timesteps>')
-        """
-        self.file.write('    <timesteps>')
-        self.file.write('                        <pair>\n')
-        self.file.write('                            <repeat>' + str(1)+ '</repeat>\n')
-        self.file.write('                            <each_steps>' + str(10000)+ '</each_steps>\n')
-        self.file.write('                        </pair>\n')
-        self.file.write('    </timesteps>')
-        self.file.write('            <fixed_output_times>')
-        
-        for i in range(500):
-            self.file.write(' ' + str((1+i)*30))
-            #300 600 900 1200 1500 1800 2100 2400 2700 3000 3300 3600 3900 4200 4500 4800 5100 5400 5700 6000 6300 6600 6900 7200 7500 7800 8100 8400 8700 9000
-
-        self.file.write('  </fixed_output_times>')
-        """
-        #self.file.write('            <output_iteration_results>false</output_iteration_results>')
         
         self.file.write('        </output>\n')
         self.file.write('    </time_loop>\n')
