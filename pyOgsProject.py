@@ -161,7 +161,7 @@ class GenerateProject:
         self.processsecond_var_out_name = 'darcy_velocity'
         
     def setStandardDensityModel(self):
-        self.densityModel = "ConcentrationAndPressureDependent"
+        self.densityModel = "ConcentrationDependent"
 
         
     def writeProcessInformation(self):
@@ -426,30 +426,15 @@ class GenerateProject:
     def resetBoundaryConditions(self):
         self.boundary_conditions_c, self.boundary_conditions_p = [], []
     
-    def createDirichletLeftRightBoundaryCondition(self):
-        self.boundary_conditions_p.append(BoundaryCondition("NonuniformDirichlet", "geometry", "right", "bdL.vtu", "p_ini"))
-        self.boundary_conditions_p.append(BoundaryCondition("NonuniformDirichlet", "geometry", "right", "bdR.vtu", "p_ini"))
-    
     def createBoundaryCondition(self,corresponding_parameter,*args):
         bc = BoundaryCondition(*args)
         if(corresponding_parameter=="c"):
             self.boundary_conditions_c.append(bc)
         if(corresponding_parameter=="p"):
             self.boundary_conditions_p.append(bc)
-        self.meshnames.append(bc.mesh+".vtu")
+        if (bc.mesh+".vtu") not in self.meshnames:
+            self.meshnames.append(bc.mesh+".vtu")
         
-    def setStandardBoundaryConditions(self):
-        self.c_ini = "c_ini"
-        self.p_ini = "p_ini"
-        self.boundary_conditions_c.append(BoundaryCondition("Dirichlet", "geometry", "left", "c_ini"))
-        self.boundary_conditions_c.append(BoundaryCondition("NonuniformNeumann", "geometry", "right", "Negative.vtu", "flux"))
-        self.boundary_conditions_c.append(BoundaryCondition("NeumannTimeDependant", "geometry", "right", "Tree.vtu", "psileaf", "gname", "resistance"))
-        
-        self.boundary_conditions_p.append(BoundaryCondition("NonuniformDirichlet", "geometry", "right", "testmesh_bd1.vtu", "p_ini"))
-        self.boundary_conditions_p.append(BoundaryCondition("NonuniformDirichlet", "geometry", "right", "testmesh_bd2.vtu", "p_ini"))
-        self.boundary_conditions_p.append(BoundaryCondition("NonuniformNeumann", "geometry", "right", "Negative.vtu", "flux"))
-        self.boundary_conditions_p.append(BoundaryCondition("NeumannTimeDependant", "geometry", "right", "Tree.vtu", "psileaf", "gname", "resistance"))
-
     def writeBoundaryConditions(self):
         self.file.write("    <process_variables>\n")
         self.file.write("        <process_variable>\n")
