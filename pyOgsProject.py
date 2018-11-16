@@ -57,10 +57,8 @@ class BoundaryCondition:
             self.writeNeumannOrDirichletBoundary(file)
         if(self.type=="NonuniformNeumann" or self.type == "NonuniformDirichlet"):
             self.writeNonuniformBoundary(file)
-        if(self.type=="NeumannTimeDependant"):
-            self.writeNeumannTimeDependantBoundary(file)  
         if(self.type=="NonuniformVariableDependentNeumann"):
-            self.writeNeumannTimeDependantBoundary(file) 
+            self.writeNeumannTimeDependentBoundary(file) 
             
     def writeNeumannOrDirichletBoundary(self, file):
         file.write('                <boundary_condition>\n')    
