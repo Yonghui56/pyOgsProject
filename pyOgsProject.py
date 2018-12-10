@@ -276,10 +276,10 @@ class GenerateProject:
         else:
             for i in range(len(outputrepeats)):
                 outputstep = []
-                outputstep.append('                        <pair>\n')
-                outputstep.append('                            <repeat>' + str(outputrepeats[i])+ '</repeat>\n')
-                outputstep.append('                            <each_steps>' + str(outputdeltaN[i])+ '</each_steps>\n')
-                outputstep.append('                        </pair>\n')
+                outputstep.append('                <pair>\n')
+                outputstep.append('                    <repeat>' + str(outputrepeats[i])+ '</repeat>\n')
+                outputstep.append('                    <each_steps>' + str(outputdeltaN[i])+ '</each_steps>\n')
+                outputstep.append('                </pair>\n')
                 self.outputSteppingSettings.append(outputstep)
 
     def writeTimeLoop(self):
@@ -295,12 +295,6 @@ class GenerateProject:
         self.file.write('                <time_discretization>\n')
         self.file.write('                    <type>'+self.time_disc_type+'</type>\n')
         self.file.write('                </time_discretization>\n')
-        self.file.write('                <output>\n')
-        self.file.write('                    <variables>\n')
-        for variable in self.outputvariables:
-            self.file.write('                        <variable>'+variable+'</variable>\n')
-        self.file.write('                    </variables>\n')
-        self.file.write('                </output>\n')
         self.file.write('                <time_stepping>\n')
         """self.file.write('                    <type>EvolutionaryPIDcontroller</type>')
         self.file.write('            <t_initial> 0.0 </t_initial>')
@@ -336,15 +330,18 @@ class GenerateProject:
         self.file.write('        <output>\n')
         self.file.write('            <type>'+self.output_type +'</type>\n')
         self.file.write('            <prefix>'+self.output_prefix +'</prefix>\n')
-        self.file.write('            <timesteps>')
+        self.file.write('            <timesteps>\n')
         for i in range(len(self.outputSteppingSettings)):
             
             for j in range(len(self.outputSteppingSettings[i])):
                 self.file.write(self.outputSteppingSettings[i][j])
 
         
-        self.file.write('    </timesteps>')
-        
+        self.file.write('            </timesteps>\n')
+        self.file.write('            <variables>\n')
+        for variable in self.outputvariables:
+            self.file.write('                <variable>'+variable+'</variable>\n')
+        self.file.write('            </variables>\n')
         self.file.write('        </output>\n')
         self.file.write('    </time_loop>\n')
         
