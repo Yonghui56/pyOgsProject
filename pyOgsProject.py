@@ -30,9 +30,7 @@ class BoundaryCondition:
         self.type = tYpe
         self.parameter = parameter
 
-    def NonuniformBoundary(self, tYpe, geoset, geometry, meshname, field_name):
-        self.geoset = geoset
-        self.geometry = geometry
+    def NonuniformBoundary(self, tYpe, meshname, field_name):
         self.type = tYpe
         self.mesh = meshname
         self.field_name = field_name
