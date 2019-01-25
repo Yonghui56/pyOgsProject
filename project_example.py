@@ -20,15 +20,14 @@ outputdeltaN = [1185, 600, 600]
 project = pyOgsProject.GenerateProject(project_dir + project_name + ".prj")
 project.setMesh(mesh_name+".vtu")
 project.setStandardProcessInformation()
-project.setStandartTimeLoop()
+project.setStandartFixedTimeLoop()
 project.setStandartParameters()
 project.setStandardDensityModel()
 
 project.setStandardNonlinearSolvers()
 
-project.setTimeSteppingAndOutputLoops(
-        timerepeats, timedeltaTs, outputrepeats, outputdeltaN)
-
+project.setFixedTimeStepping(timerepeats, timedeltaTs)
+project.setOutputLoops(outputrepeats, outputdeltaN)
 
 project.convergence_criterion_reltols = "1e-6 1e-6"
 

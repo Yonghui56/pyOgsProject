@@ -245,7 +245,7 @@ class GenerateProject:
         self.output_prefix = str(args[12])
         self.output_each_steps = str(args[13])
 
-    def setStandartTimeLoop(self):
+    def setStandartFixedTimeLoop(self):
         self.process_ref = "hc"
         self.nonlinear_solver = "basic_picard"
         self.convergence_criterion_type = "PerComponentDeltaX"
@@ -260,10 +260,31 @@ class GenerateProject:
         self.output_prefix = "interface_output"
         self.output_each_steps = "1"
 
-    def setTimeSteppingAndOutputLoops(
-            self, timerepeats, timedeltaTs, outputrepeats, outputdeltaN):
+    def setStandartAdaptiveTimeLoop(self):
+        self.process_ref = "hc"
+        self.nonlinear_solver = "basic_picard"
+        self.convergence_criterion_type = "PerComponentDeltaX"
+        self.convergence_criterion_norm = "NORM2"
+        self.convergence_criterion_reltols = "5e-5 5e-5"
+        self.time_disc_type = "BackwardEuler"
+        self.outputvariables = ["concentration", "pressure", "darcy_velocity"]
+        self.time_stepping_type = "IterationNumberBasedTimeStepping"
+        self.time_stepping_t_ini = "0.0"
+        self.time_stepping_t_end = "1e5"
+        self.output_type = "VTK"
+        self.output_prefix = "interface_output"
+        self.output_each_steps = "1e4"
+        self.timeloop_initial_dt = "1e3"
+        self.timeloop_minimum_dt = "1e-1"
+        self.timeloop_maximum_dt = "1e4"
+        self.timeloop_number_iterations_list = "1 2 3 4 5 6 7 8 9 10"
+        self.timeloop_multiplier_list = " 1.005 1.001 0.999 0.995 0.975 0.95 0.925 0.9 0.85 0.5"
+        self.timeloop_fixed_output_times = "432000 864000 1296000 1728000 2160000 2592000"
+        self.timeloop_output_iteration_results = "false"
+
+    def setFixedTimeStepping(self, timerepeats, timedeltaTs):
         self.timeSteppingSettings = []
-        self.outputSteppingSettings = []
+
         if(len(timerepeats) != len(timedeltaTs) != 0):
             print("INPUT ERROR: All input lists for timeloop are obliged to have equal length>0!")
         else:
@@ -275,8 +296,11 @@ class GenerateProject:
                 timestep.append('                        </pair>\n')
                 self.timeSteppingSettings.append(timestep)
 
+    def setOutputLoops(self, outputrepeats, outputdeltaN):
+        self.outputSteppingSettings = []
         if(len(outputrepeats) != len(outputdeltaN) != 0):
             print("INPUT ERROR: All input lists for outputloop are obliged to have equal length>0!")
+            exit()
         else:
             for i in range(len(outputrepeats)):
                 outputstep = []
@@ -285,6 +309,9 @@ class GenerateProject:
                 outputstep.append('                    <each_steps>' + str(outputdeltaN[i])+ '</each_steps>\n')
                 outputstep.append('                </pair>\n')
                 self.outputSteppingSettings.append(outputstep)
+
+    def setFixedOutputTimes(self, fixed_output_times):
+        self.timeloop_fixed_output_times = fixed_output_times
 
     def writeTimeLoop(self):
         self.file.write('    <time_loop>\n')
@@ -303,14 +330,25 @@ class GenerateProject:
         self.file.write('                    <type>'+self.time_stepping_type+'</type>\n')
         self.file.write('                    <t_initial>'+self.time_stepping_t_ini+'</t_initial>\n')
         self.file.write('                    <t_end>'+self.time_stepping_t_end+'</t_end>\n')
-        self.file.write('                    <timesteps>\n')
-        for i in range(len(self.timeSteppingSettings)):
+        if self.time_stepping_type == "FixedTimeStepping":
+            self.file.write('                    <timesteps>\n')
+            for i in range(len(self.timeSteppingSettings)):
 
-            for j in range(len(self.timeSteppingSettings[i])):
-                self.file.write(self.timeSteppingSettings[i][j])
+                for j in range(len(self.timeSteppingSettings[i])):
+                    self.file.write(self.timeSteppingSettings[i][j])
 
 
-        self.file.write('                    </timesteps>\n')
+            self.file.write('                    </timesteps>\n')
+        elif self.time_stepping_type == "IterationNumberBasedTimeStepping":
+
+            self.file.write('                    <initial_dt>' + self.timeloop_initial_dt + '</initial_dt>\n')
+            self.file.write('                    <minimum_dt>' + self.timeloop_minimum_dt + '</minimum_dt>\n')
+            self.file.write('                    <maximum_dt>' + self.timeloop_maximum_dt +  '</maximum_dt>\n')
+            self.file.write('                    <number_iterations>' + self.timeloop_number_iterations_list + '</number_iterations>\n')
+            self.file.write('                    <multiplier>' + self.timeloop_multiplier_list + '</multiplier>\n')
+        else:
+            print("ERROR: Uknown time stepping type: " + self.time_stepping_type)
+            exit()
         self.file.write('                </time_stepping>\n')
 
         self.file.write('            </process>\n')
@@ -323,9 +361,13 @@ class GenerateProject:
 
             for j in range(len(self.outputSteppingSettings[i])):
                 self.file.write(self.outputSteppingSettings[i][j])
-
-
         self.file.write('            </timesteps>\n')
+        if self.time_stepping_type == "IterationNumberBasedTimeStepping":
+            self.file.write('            <fixed_output_times>')
+            for string in self.timeloop_fixed_output_times:
+                self.file.write(' ' + str(string))
+            self.file.write(' </fixed_output_times>\n')
+            self.file.write('            <output_iteration_results>' + self.timeloop_output_iteration_results + '</output_iteration_results>\n')
         self.file.write('            <variables>\n')
         for variable in self.outputvariables:
             self.file.write('                <variable>'+variable+'</variable>\n')
@@ -461,7 +503,7 @@ class GenerateProject:
     def setStandardNonlinearSolvers(self):
         self.solver_name = "basic_picard"
         self.solver_type = "Picard"
-        self.solver_max_iter = "200"
+        self.solver_max_iter = "15"
         self.solver_linear_solver = "general_linear_solver"
         self.solver_linear_solver_name = "general_linear_solver"
         self.solver_linear_solver_lis = "-i bicgstab -p ilut -tol 1e-8 -maxiter 20000"
