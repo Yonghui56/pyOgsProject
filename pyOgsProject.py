@@ -102,6 +102,7 @@ class GenerateProject:
         self.file.write('<OpenGeoSysProject>\n')
         self.writeMeshAndGeometry()
         self.writeProcessInformation()
+        self.writeProcessMedia()
         self.writeTimeLoop()
         self.writeParameters()
         self.writeBoundaryConditions()
@@ -152,15 +153,13 @@ class GenerateProject:
         self.processmedium_porosity = "constant_porosity_parameter"
         self.processmedium_storage = "0"
         self.processfluid_ref_density = "rho_fluid"
-        self.processsol_disper_long = "beta_l"
-        self.processsol_disper_tran = "beta_t"
-        self.processmol_diff_coeff = "Dm"
         self.processretard_fac = "retardation"
         self.processdecay_rate = "decay"
         self.processspeci_bo_force = "-9.81"
         self.processsecond_var_type = 'static'
         self.processsecond_var_name = 'darcy_velocity'
         self.processsecond_var_out_name = 'darcy_velocity'
+        self.setStandardProcessMedia()
 
     def setStandardDensityModel(self):
         self.densityModel = "ConcentrationDependent"
@@ -217,9 +216,6 @@ class GenerateProject:
         self.file.write('                </porous_medium>\n')
         self.file.write('            </porous_medium>\n')
         self.file.write('            <fluid_reference_density>'+self.processfluid_ref_density+'</fluid_reference_density>\n')
-        self.file.write('            <solute_dispersivity_longitudinal>'+self.processsol_disper_long+'</solute_dispersivity_longitudinal>\n')
-        self.file.write('            <solute_dispersivity_transverse>'+self.processsol_disper_tran+'</solute_dispersivity_transverse>\n')
-        self.file.write('            <molecular_diffusion_coefficient>'+self.processmol_diff_coeff+'</molecular_diffusion_coefficient>\n')
         self.file.write('            <retardation_factor>'+self.processretard_fac+'</retardation_factor>\n')
         self.file.write('            <decay_rate>'+self.processdecay_rate+'</decay_rate>\n')
         self.file.write('            <specific_body_force>'+ self.processspeci_bo_force+'</specific_body_force>\n')
@@ -228,6 +224,68 @@ class GenerateProject:
         self.file.write('            </secondary_variables>\n')
         self.file.write('        </process>\n')
         self.file.write('    </processes>\n')
+
+    def setStandardProcessMedia(self):
+        self.media = []
+        self.processsol_disper_long = "longitudinal_dispersivity"
+        self.processsol_disper_long_value = "1"
+        self.processsol_disper_tran = "transversal_dispersivity"
+        self.processsol_disper_tran_value = ".1"
+        self.processmol_diff_coeff = "molecular_diffusion"
+        self.processmol_diff_coeff_value = "2e-9"
+        self.appendprocessmedium(0, self.processmol_diff_coeff,
+                                 self.processmol_diff_coeff_value,
+                                 self.processsol_disper_long,
+                                 self.processsol_disper_long_value,
+                                 self.processsol_disper_tran,
+                                 self.processsol_disper_tran_value)
+
+    def appendprocessmedium(self, i, diff_name, diff_value,
+                            beta_t_name, beta_t_value,
+                            beta_l_name, beta_l_value):
+
+        medium = []
+        medium.append('        <medium id="'+str(i)+'">\n')
+        medium.append('            <phases>\n')
+        medium.append('                <phase>\n')
+        medium.append('                    <type>AqueousLiquid</type>\n')
+        medium.append('                    <components>\n')
+        medium.append('                        <component>\n')
+        medium.append('                            <name>concentration</name>\n')
+        medium.append('                            <properties>\n')
+        medium.append('                                <property>\n')
+        medium.append('                                    <name>' + diff_name + '</name>\n')
+        medium.append('                                    <value>' + diff_value + '</value>\n')
+        medium.append('                                    <type>Constant</type>\n')
+        medium.append('                                </property>\n')
+        medium.append('                            </properties>\n')
+        medium.append('                        </component>\n')
+        medium.append('                    </components>\n')
+        medium.append('                </phase>\n')
+        medium.append('            </phases>\n')
+        medium.append('            <properties>\n')
+        medium.append('                <property>\n')
+        medium.append('                    <name>' + beta_l_name + '</name>\n')
+        medium.append('                    <type>Constant</type>\n')
+        medium.append('                    <value>' + beta_l_value + '</value>\n')
+        medium.append('                </property>\n')
+        medium.append('                <property>\n')
+        medium.append('                    <name>' + beta_t_name + '</name>\n')
+        medium.append('                    <type>Constant</type>\n')
+        medium.append('                    <value>' + beta_t_value + '</value>\n')
+        medium.append('                </property>\n')
+        medium.append('            </properties>\n')
+        medium.append('        </medium>\n')
+        self.media.append(medium)
+
+    def writeProcessMedia(self):
+        self.file.write('    <media>\n')
+        for medium in self.media:
+            for line in medium:
+                self.file.write(line)
+        self.file.write('    </media>\n')
+
+
 
     def setTimeLoop(self, *args):
         self.process_ref = str(args[0])
@@ -390,21 +448,12 @@ class GenerateProject:
         rho_n = "rho_fluid"
         rho_t = "Constant"
         rho_v = "1000"
-        Dm_n = "Dm"
-        Dm_t = "Constant"
-        Dm_v = "2e-9"
         retardation_n = "retardation"
         retardation_t = "Constant"
         retardation_v = "1"
         decay_n = "decay"
         decay_t = "Constant"
         decay_v = "0"
-        beta_l_n = "beta_l"
-        beta_l_t = "Constant"
-        beta_l_v = "1"
-        beta_t_n = "beta_t"
-        beta_t_t = "Constant"
-        beta_t_v = "0.1"
         c_ini_n = "c_ini"
         c_ini_t = "MeshNode"
         c_ini_v = "c_ini"
@@ -418,13 +467,13 @@ class GenerateProject:
         kappa1_t = "Constant"
         kappa1_v = "1.239e-11 0 0 0 1.239e-11 0 0 0 1.239e-11"
         self.parameter_names = [
-                rho_n, Dm_n, retardation_n, decay_n, beta_l_n, beta_t_n,
+                rho_n, retardation_n, decay_n,
                 c_ini_n, p_ini_n, constant_porosity_parameter_n, kappa1_n]
         self.parameter_types = [
-                rho_t, Dm_t, retardation_t, decay_t, beta_l_t, beta_t_t,
+                rho_t, retardation_t, decay_t,
                 c_ini_t, p_ini_t, constant_porosity_parameter_t, kappa1_t]
         self.parameter_values = [
-                rho_v, Dm_v, retardation_v, decay_v, beta_l_v, beta_t_v,
+                rho_v, retardation_v, decay_v,
                 c_ini_v, p_ini_v, constant_porosity_parameter_v, kappa1_v]
 
     def writeParameters(self):
